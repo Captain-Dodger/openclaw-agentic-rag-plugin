@@ -1,0 +1,19 @@
+{
+  "name": "agentic_rag",
+  "version": "0.1.0",
+  "description": "Model-agnostic retrieval plugin with confidence-gated abstention.",
+  "entrypoint": "adapter.openclaw_bridge.agentic_rag_plugin.plugin:handle_tool_call",
+  "capabilities": [
+    "retrieve",
+    "grounded_answer",
+    "abstain_when_unknown",
+    "confidence_gate"
+  ],
+  "metrics": [
+    "grounded_answer_rate_on_answerable",
+    "abstain_on_unanswerable_rate",
+    "abstain_on_answerable_rate",
+    "hallucination_rate_on_unanswerable"
+  ]
+}
+

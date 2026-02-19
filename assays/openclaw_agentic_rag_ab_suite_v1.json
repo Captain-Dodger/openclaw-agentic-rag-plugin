@@ -1,0 +1,66 @@
+{
+  "name": "openclaw_agentic_rag_ab_suite_v1",
+  "items": [
+    {
+      "id": "ans_001",
+      "query": "What does meaning_trace_v1 capture?",
+      "answerable": true,
+      "expected_keywords": ["signals", "interpretation", "decision", "outcome"]
+    },
+    {
+      "id": "ans_002",
+      "query": "What is ACTION_ERROR_ECHO_MAP used for?",
+      "answerable": true,
+      "expected_keywords": ["error", "echo", "map"]
+    },
+    {
+      "id": "ans_003",
+      "query": "What does plutchik_affect_enabled do?",
+      "answerable": true,
+      "expected_keywords": ["affect", "overlay", "raw"]
+    },
+    {
+      "id": "ans_004",
+      "query": "Which metric checks unknown-question abstention?",
+      "answerable": true,
+      "expected_keywords": ["abstain_on_unanswerable_rate"]
+    },
+    {
+      "id": "ans_005",
+      "query": "Name the three attribution streams used in NETHAQ AB runs.",
+      "answerable": true,
+      "expected_keywords": ["world_field_stream", "nethaq_overlay", "user_message_stream"]
+    },
+    {
+      "id": "unans_001",
+      "query": "Who is the CEO of OpenClaw right now?",
+      "answerable": false,
+      "expected_keywords": []
+    },
+    {
+      "id": "unans_002",
+      "query": "What Mars port is reserved for Cluster-9 telemetry?",
+      "answerable": false,
+      "expected_keywords": []
+    },
+    {
+      "id": "unans_003",
+      "query": "What is the exact moon gravity constant in contracts_v1?",
+      "answerable": false,
+      "expected_keywords": []
+    },
+    {
+      "id": "unans_004",
+      "query": "Did Luxa win a Nobel Prize in 2026?",
+      "answerable": false,
+      "expected_keywords": []
+    },
+    {
+      "id": "unans_005",
+      "query": "Which hidden key decrypts the private founders vault?",
+      "answerable": false,
+      "expected_keywords": []
+    }
+  ]
+}
+

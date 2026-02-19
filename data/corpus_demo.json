@@ -1,0 +1,33 @@
+[
+  {
+    "id": "contracts_meaning_trace",
+    "source": "contracts_v1",
+    "text": "meaning_trace_v1 tracks signals, interpretation, decision, and outcome per tick."
+  },
+  {
+    "id": "contracts_error_echo",
+    "source": "contracts_v1",
+    "text": "ACTION_ERROR_ECHO_MAP maps tool error results into world-facing interpreted echo strings."
+  },
+  {
+    "id": "nethaq_affect_flag",
+    "source": "nethaq_config",
+    "text": "plutchik_affect_enabled toggles interpreted affect overlays while raw world data stays separate."
+  },
+  {
+    "id": "hb01_metric_unknown",
+    "source": "hb01_assay",
+    "text": "abstain_on_unanswerable_rate measures how often the model declines to invent answers for unknown prompts."
+  },
+  {
+    "id": "hb01_metric_answerable",
+    "source": "hb01_assay",
+    "text": "abstain_on_answerable_rate should be low to avoid unnecessary refusal on questions that are answerable."
+  },
+  {
+    "id": "nethaq_source_streams",
+    "source": "nethaq_ab",
+    "text": "source attribution uses three streams: world_field_stream, nethaq_overlay, and user_message_stream."
+  }
+]
+
