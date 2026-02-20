@@ -3,7 +3,10 @@ __pycache__/
 *.egg-info/
 .venv/
 .pytest_cache/
+node_modules/
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
 
 # Generated artifacts
 results/openclaw_agentic_rag_runs/
-

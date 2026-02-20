@@ -1,0 +1,61 @@
+{
+  "id": "agentic-rag",
+  "name": "Agentic RAG",
+  "description": "Bridge plugin that exposes confidence-gated Python RAG as an OpenClaw tool.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "pythonBin": {
+        "type": "string",
+        "description": "Python binary used to execute the bridge script."
+      },
+      "workingDir": {
+        "type": "string",
+        "description": "Optional plugin-relative working directory for bridge execution."
+      },
+      "bridgeScript": {
+        "type": "string",
+        "description": "Plugin-relative path to bridge script.",
+        "default": "bridge/run_agentic_rag_tool.py"
+      },
+      "corpusPath": {
+        "type": "string",
+        "description": "Path to retrieval corpus JSON."
+      },
+      "minRetrievalScore": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minConfidence": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "topK": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 32
+      },
+      "maxContextChars": {
+        "type": "integer",
+        "minimum": 64,
+        "maximum": 50000
+      },
+      "abstainMessage": {
+        "type": "string"
+      },
+      "timeoutMs": {
+        "type": "integer",
+        "minimum": 1000,
+        "maximum": 120000,
+        "default": 15000
+      }
+    }
+  }
+}

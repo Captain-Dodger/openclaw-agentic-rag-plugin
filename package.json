@@ -1,0 +1,12 @@
+{
+  "name": "@captain-dodger/openclaw-agentic-rag-plugin",
+  "version": "0.1.0",
+  "description": "OpenClaw plugin pack: confidence-gated agentic RAG bridge to Python core",
+  "private": true,
+  "type": "module",
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}
