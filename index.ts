@@ -18,6 +18,7 @@ type PluginCfg = {
   topK?: number;
   maxContextChars?: number;
   abstainMessage?: string;
+  arbiterMode?: "off" | "shadow" | "enforce";
   arbiterEnabled?: boolean;
   arbiterSharedLabel?: string;
   arbiterMinEvidenceChars?: number;
@@ -62,6 +63,7 @@ function resolveConfig(api: any): Required<Pick<PluginCfg, "enabled" | "pythonBi
     topK: cfg.topK,
     maxContextChars: cfg.maxContextChars,
     abstainMessage: cfg.abstainMessage,
+    arbiterMode: cfg.arbiterMode,
     arbiterEnabled: cfg.arbiterEnabled,
     arbiterSharedLabel: cfg.arbiterSharedLabel,
     arbiterMinEvidenceChars: cfg.arbiterMinEvidenceChars,
@@ -206,6 +208,7 @@ const plugin = {
               topK: cfg.topK,
               maxContextChars: cfg.maxContextChars,
               abstainMessage: cfg.abstainMessage,
+              arbiterMode: cfg.arbiterMode,
               arbiterEnabled: cfg.arbiterEnabled,
               arbiterSharedLabel: cfg.arbiterSharedLabel,
               arbiterMinEvidenceChars: cfg.arbiterMinEvidenceChars,

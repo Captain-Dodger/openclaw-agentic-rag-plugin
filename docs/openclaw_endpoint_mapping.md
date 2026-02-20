@@ -65,6 +65,7 @@ Configured under `plugins.entries["agentic-rag"].config`:
 | `topK` | `pluginConfig.topK` | `top_k` |
 | `maxContextChars` | `pluginConfig.maxContextChars` | `max_context_chars` |
 | `abstainMessage` | `pluginConfig.abstainMessage` | `abstain_message` |
+| `arbiterMode` | `pluginConfig.arbiterMode` | `arbiter_mode` |
 | `arbiterEnabled` | `pluginConfig.arbiterEnabled` | `arbiter_enabled` |
 | `arbiterSharedLabel` | `pluginConfig.arbiterSharedLabel` | `arbiter_shared_label` |
 | `arbiterMinEvidenceChars` | `pluginConfig.arbiterMinEvidenceChars` | `arbiter_min_evidence_chars` |

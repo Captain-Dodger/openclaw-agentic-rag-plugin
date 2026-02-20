@@ -92,6 +92,12 @@
       "abstainMessage": {
         "type": "string"
       },
+      "arbiterMode": {
+        "type": "string",
+        "enum": ["off", "shadow", "enforce"],
+        "default": "off",
+        "description": "Arbiter execution mode: off, shadow (observe-only), or enforce."
+      },
       "arbiterEnabled": {
         "type": "boolean",
         "default": false,

@@ -356,8 +356,16 @@ class AgenticRagPlugin:
         if self._last_retrieval_meta.get("note"):
             metrics["retrieval_note"] = self._last_retrieval_meta["note"]
 
+        raw_mode = (self.config.arbiter_mode or "off").strip().lower()
+        if raw_mode not in {"off", "shadow", "enforce"}:
+            raw_mode = "off"
+        arbiter_mode = raw_mode
+        # Backward compatibility: old boolean enable flag implies enforce.
+        if arbiter_mode == "off" and self.config.arbiter_enabled:
+            arbiter_mode = "enforce"
+
         arbiter: dict[str, Any] | None = None
-        if self.config.arbiter_enabled:
+        if arbiter_mode != "off":
             arbiter = run_arbiter_v1(
                 query=query,
                 hits=hits,
@@ -368,9 +376,14 @@ class AgenticRagPlugin:
                 grounded_candidate=grounded,
                 config=self.config,
             )
-            grounded = bool(arbiter.get("mode") == "answer")
+            if arbiter_mode == "enforce":
+                grounded = bool(arbiter.get("mode") == "answer")
             metrics["arbiter_v1"] = arbiter.get("metrics", {})
             metrics["arbiter_packets"] = arbiter.get("packets", [])
+            metrics["arbiter_mode"] = arbiter_mode
+            metrics["arbiter_effective"] = (
+                "applied" if arbiter_mode == "enforce" else "shadow_only"
+            )
             if arbiter.get("refine_query"):
                 metrics["refine_query"] = arbiter["refine_query"]
 
@@ -379,8 +392,13 @@ class AgenticRagPlugin:
                 "No sufficient grounded evidence from retrieval "
                 f"(top_score={top}, confidence={confidence})."
             )
-            if arbiter:
+            if arbiter and arbiter_mode == "enforce":
                 rationale += f" arbiter_v1={arbiter.get('rationale', 'n/a')}."
+            elif arbiter and arbiter_mode == "shadow":
+                rationale += (
+                    " arbiter_shadow="
+                    f"{arbiter.get('mode', 'n/a')}({arbiter.get('rationale', 'n/a')})."
+                )
             return RagDecision(
                 mode="abstain",
                 confidence=confidence,
@@ -396,8 +414,13 @@ class AgenticRagPlugin:
             "Grounded by retrieval hits above thresholds "
             f"(top_score={top}, confidence={confidence})."
         )
-        if arbiter:
+        if arbiter and arbiter_mode == "enforce":
             rationale += f" arbiter_v1={arbiter.get('rationale', 'n/a')}."
+        elif arbiter and arbiter_mode == "shadow":
+            rationale += (
+                " arbiter_shadow="
+                f"{arbiter.get('mode', 'n/a')}({arbiter.get('rationale', 'n/a')})."
+            )
         return RagDecision(
             mode="answer",
             confidence=confidence,
@@ -457,6 +480,7 @@ def _default_plugin() -> AgenticRagPlugin:
         embedding_timeout_ms=_env_int("OPENCLAW_AGENTIC_RAG_EMBEDDING_TIMEOUT_MS", 10000),
         hybrid_lexical_weight=_env_float("OPENCLAW_AGENTIC_RAG_HYBRID_LEXICAL_WEIGHT", 0.35),
         hybrid_min_lexical_score=_env_float("OPENCLAW_AGENTIC_RAG_HYBRID_MIN_LEXICAL_SCORE", 0.0),
+        arbiter_mode=os.getenv("OPENCLAW_AGENTIC_RAG_ARBITER_MODE", "off"),
         arbiter_enabled=_env_bool("OPENCLAW_AGENTIC_RAG_ARBITER_ENABLED", False),
         arbiter_shared_label=os.getenv("OPENCLAW_AGENTIC_RAG_ARBITER_SHARED_LABEL", "contracts_v1"),
         arbiter_min_evidence_chars=_env_int("OPENCLAW_AGENTIC_RAG_ARBITER_MIN_EVIDENCE_CHARS", 120),

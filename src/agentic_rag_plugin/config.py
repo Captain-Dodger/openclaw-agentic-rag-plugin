@@ -22,6 +22,7 @@ class AgenticRagConfig:
     hybrid_lexical_weight: float = 0.35
     hybrid_min_lexical_score: float = 0.0
     # Optional multi-role arbitration layer (off by default).
+    arbiter_mode: str = "off"  # off | shadow | enforce
     arbiter_enabled: bool = False
     arbiter_shared_label: str = "contracts_v1"
     arbiter_evidence_skills: tuple[str, str] = ("retrieval_quality", "source_attribution")

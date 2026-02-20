@@ -60,10 +60,22 @@ def _sanitize_bool(value: Any, default: bool = False) -> bool:
     return default
 
 
+def _sanitize_arbiter_mode(value: Any, default: str = "off") -> str:
+    if isinstance(value, str):
+        mode = value.strip().lower()
+        if mode in {"off", "shadow", "enforce"}:
+            return mode
+    return default
+
+
 def _config_from_plugin_config(cfg: dict[str, Any]) -> AgenticRagConfig:
     retrieval_mode = str(cfg.get("retrievalMode") or "lexical").strip().lower()
     if retrieval_mode not in {"lexical", "hybrid"}:
         retrieval_mode = "lexical"
+    arbiter_mode = _sanitize_arbiter_mode(cfg.get("arbiterMode"), "off")
+    # Backward compatibility: if old flag enabled and mode unset, use enforce.
+    if cfg.get("arbiterMode") is None and _sanitize_bool(cfg.get("arbiterEnabled", False), False):
+        arbiter_mode = "enforce"
     return AgenticRagConfig(
         top_k=int(_sanitize_number(cfg.get("topK"), 4, 1, 32)),
         min_retrieval_score=float(_sanitize_number(cfg.get("minRetrievalScore"), 0.18, 0.0, 1.0)),
@@ -80,6 +92,7 @@ def _config_from_plugin_config(cfg: dict[str, Any]) -> AgenticRagConfig:
         embedding_timeout_ms=int(_sanitize_number(cfg.get("embeddingTimeoutMs"), 10000, 500, 120000)),
         hybrid_lexical_weight=float(_sanitize_number(cfg.get("hybridLexicalWeight"), 0.35, 0.0, 1.0)),
         hybrid_min_lexical_score=float(_sanitize_number(cfg.get("hybridMinLexicalScore"), 0.0, 0.0, 1.0)),
+        arbiter_mode=arbiter_mode,
         arbiter_enabled=_sanitize_bool(cfg.get("arbiterEnabled", False), False),
         arbiter_shared_label=str(cfg.get("arbiterSharedLabel") or "contracts_v1"),
         arbiter_min_evidence_chars=int(

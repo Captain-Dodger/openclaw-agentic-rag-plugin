@@ -20,6 +20,7 @@
           "corpusPath": "data/corpus_demo.json",
           "minRetrievalScore": 0.12,
           "minConfidence": 0.12,
+          "arbiterMode": "off",
           "arbiterEnabled": false,
           "arbiterSharedLabel": "contracts_v1",
           "arbiterMinEvidenceChars": 120,

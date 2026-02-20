@@ -48,6 +48,7 @@ Default is `off` (no behavior change from baseline).
 
 Config keys:
 
+- `arbiterMode` (`off|shadow|enforce`)
 - `arbiterEnabled`
 - `arbiterSharedLabel`
 - `arbiterMinEvidenceChars`
@@ -147,6 +148,7 @@ Then restart the OpenClaw gateway process so it picks up the new env value.
           corpusPath: "data/corpus_demo.json",
           minRetrievalScore: 0.12,
           minConfidence: 0.12,
+          arbiterMode: "off",
           arbiterEnabled: false,
           arbiterSharedLabel: "contracts_v1",
           arbiterMinEvidenceChars: 120,
