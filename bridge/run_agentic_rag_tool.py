@@ -48,7 +48,22 @@ def _sanitize_number(value: Any, default: float | int, lo: float | int, hi: floa
     return float(num)
 
 
+def _sanitize_bool(value: Any, default: bool = False) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        v = value.strip().lower()
+        if v in {"1", "true", "yes", "on"}:
+            return True
+        if v in {"0", "false", "no", "off"}:
+            return False
+    return default
+
+
 def _config_from_plugin_config(cfg: dict[str, Any]) -> AgenticRagConfig:
+    retrieval_mode = str(cfg.get("retrievalMode") or "lexical").strip().lower()
+    if retrieval_mode not in {"lexical", "hybrid"}:
+        retrieval_mode = "lexical"
     return AgenticRagConfig(
         top_k=int(_sanitize_number(cfg.get("topK"), 4, 1, 32)),
         min_retrieval_score=float(_sanitize_number(cfg.get("minRetrievalScore"), 0.18, 0.0, 1.0)),
@@ -58,6 +73,13 @@ def _config_from_plugin_config(cfg: dict[str, Any]) -> AgenticRagConfig:
             cfg.get("abstainMessage")
             or "I do not have enough grounded evidence in indexed sources to answer safely."
         ),
+        retrieval_mode=retrieval_mode,
+        embedding_enabled=_sanitize_bool(cfg.get("embeddingEnabled", False), False),
+        embedding_base_url=str(cfg.get("embeddingBaseUrl") or "http://127.0.0.1:1234/v1"),
+        embedding_model=str(cfg.get("embeddingModel") or "text-embedding-nomic-embed-text-v1.5"),
+        embedding_timeout_ms=int(_sanitize_number(cfg.get("embeddingTimeoutMs"), 10000, 500, 120000)),
+        hybrid_lexical_weight=float(_sanitize_number(cfg.get("hybridLexicalWeight"), 0.35, 0.0, 1.0)),
+        hybrid_min_lexical_score=float(_sanitize_number(cfg.get("hybridMinLexicalScore"), 0.0, 0.0, 1.0)),
     )
 
 

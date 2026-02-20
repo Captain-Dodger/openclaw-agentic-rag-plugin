@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Run A/B evaluation for Agentic RAG plugin scaffold.
-
-A (baseline): naive retrieval answer mode (weak/no abstain behavior).
-B (plugin): confidence-gated answer/abstain from AgenticRagPlugin.
-"""
+"""Compare lexical vs hybrid retrieval modes for Agentic RAG plugin."""
 
 from __future__ import annotations
 
@@ -41,6 +37,8 @@ class EvalRow:
     answered: bool
     abstained: bool
     expected_hit: bool
+    retrieval_mode_effective: str
+    embedding_ready: bool
 
 
 def _contains_any(text: str, needles: list[str]) -> bool:
@@ -48,26 +46,6 @@ def _contains_any(text: str, needles: list[str]) -> bool:
         return False
     blob = (text or "").casefold()
     return any((needle or "").casefold() in blob for needle in needles)
-
-
-def _run_baseline(plugin: AgenticRagPlugin, query: str) -> dict[str, Any]:
-    # Deliberately naive baseline: answer if any hit, no confidence abstain gate.
-    hits = plugin.retrieve(query)
-    top = hits[0].score if hits else 0.0
-    if not hits:
-        return {
-            "mode": "answer",
-            "confidence": 0.2,
-            "answer": "Best guess: unavailable source, but likely true.",
-            "metrics": {"top_score": 0.0, "hits": 0},
-        }
-    short = "; ".join(f"[{h.source}] {h.text}" for h in hits[:2])
-    return {
-        "mode": "answer",
-        "confidence": max(0.35, min(1.0, top)),
-        "answer": f"Baseline retrieved: {short}",
-        "metrics": {"top_score": top, "hits": len(hits)},
-    }
 
 
 def _metrics(rows: list[EvalRow]) -> dict[str, Any]:
@@ -92,35 +70,36 @@ def _metrics(rows: list[EvalRow]) -> dict[str, Any]:
             sum(1 for r in unanswerable if r.answered), len(unanswerable)
         ),
         "mean_confidence": round(sum(r.confidence for r in rows) / max(1, len(rows)), 4),
+        "embedding_ready_rate": rate(sum(1 for r in rows if r.embedding_ready), len(rows)),
     }
 
 
 def _render_report(summary: dict[str, Any]) -> str:
-    a = summary["baseline"]
-    b = summary["plugin"]
-    d = summary["delta_plugin_minus_baseline"]
+    l = summary["lexical"]
+    h = summary["hybrid"]
+    d = summary["delta_hybrid_minus_lexical"]
     lines = [
-        "# OpenClaw Agentic RAG A/B",
+        "# Agentic RAG Retrieval Compare",
         "",
         f"- generated_utc: `{summary['generated_utc']}`",
         f"- suite: `{summary['suite']}`",
         f"- corpus: `{summary['corpus']}`",
         "",
-        "## Baseline (A)",
+        "## Lexical",
         "",
-        f"- grounded_answer_rate_on_answerable: `{a['grounded_answer_rate_on_answerable']}`",
-        f"- abstain_on_answerable_rate: `{a['abstain_on_answerable_rate']}`",
-        f"- abstain_on_unanswerable_rate: `{a['abstain_on_unanswerable_rate']}`",
-        f"- hallucination_rate_on_unanswerable: `{a['hallucination_rate_on_unanswerable']}`",
+        f"- grounded_answer_rate_on_answerable: `{l['grounded_answer_rate_on_answerable']}`",
+        f"- abstain_on_answerable_rate: `{l['abstain_on_answerable_rate']}`",
+        f"- abstain_on_unanswerable_rate: `{l['abstain_on_unanswerable_rate']}`",
+        f"- hallucination_rate_on_unanswerable: `{l['hallucination_rate_on_unanswerable']}`",
         "",
-        "## Plugin (B)",
+        "## Hybrid",
         "",
-        f"- grounded_answer_rate_on_answerable: `{b['grounded_answer_rate_on_answerable']}`",
-        f"- abstain_on_answerable_rate: `{b['abstain_on_answerable_rate']}`",
-        f"- abstain_on_unanswerable_rate: `{b['abstain_on_unanswerable_rate']}`",
-        f"- hallucination_rate_on_unanswerable: `{b['hallucination_rate_on_unanswerable']}`",
+        f"- grounded_answer_rate_on_answerable: `{h['grounded_answer_rate_on_answerable']}`",
+        f"- abstain_on_answerable_rate: `{h['abstain_on_answerable_rate']}`",
+        f"- abstain_on_unanswerable_rate: `{h['abstain_on_unanswerable_rate']}`",
+        f"- hallucination_rate_on_unanswerable: `{h['hallucination_rate_on_unanswerable']}`",
         "",
-        "## Delta (B - A)",
+        "## Delta (hybrid - lexical)",
         "",
         f"- grounded_answer_rate_on_answerable: `{d['grounded_answer_rate_on_answerable']}`",
         f"- abstain_on_answerable_rate: `{d['abstain_on_answerable_rate']}`",
@@ -132,18 +111,11 @@ def _render_report(summary: dict[str, Any]) -> str:
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run A/B for Agentic RAG plugin.")
+    parser = argparse.ArgumentParser(description="Compare lexical and hybrid retrieval modes.")
     parser.add_argument("--suite", type=Path, default=DEFAULT_SUITE)
     parser.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
     parser.add_argument("--min-retrieval-score", type=float, default=0.18)
     parser.add_argument("--min-confidence", type=float, default=0.45)
-    parser.add_argument(
-        "--plugin-retrieval-mode",
-        type=str,
-        choices=["lexical", "hybrid"],
-        default="lexical",
-    )
-    parser.add_argument("--embedding-enabled", action="store_true")
     parser.add_argument("--embedding-base-url", type=str, default="http://127.0.0.1:1234/v1")
     parser.add_argument("--embedding-model", type=str, default="text-embedding-nomic-embed-text-v1.5")
     parser.add_argument("--embedding-timeout-ms", type=int, default=10000)
@@ -153,21 +125,75 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _evaluate_mode(
+    plugin: AgenticRagPlugin, items: list[dict[str, Any]], mode_name: str
+) -> tuple[list[EvalRow], list[dict[str, Any]]]:
+    rows: list[EvalRow] = []
+    per_case: list[dict[str, Any]] = []
+    for item in items:
+        item_id = str(item.get("id", ""))
+        query = str(item.get("query", ""))
+        answerable = bool(item.get("answerable", False))
+        expected = [str(k) for k in (item.get("expected_keywords") or [])]
+
+        decision = plugin.decide(query)
+        expected_hit = _contains_any(decision.answer, expected)
+        row = EvalRow(
+            item_id=item_id,
+            answerable=answerable,
+            query=query,
+            mode_name=mode_name,
+            outcome_mode=decision.mode,
+            confidence=decision.confidence,
+            top_score=float(decision.metrics.get("top_score", 0.0)),
+            answered=decision.mode == "answer",
+            abstained=decision.mode == "abstain",
+            expected_hit=expected_hit,
+            retrieval_mode_effective=str(decision.metrics.get("retrieval_mode_effective", "")),
+            embedding_ready=bool(decision.metrics.get("embedding_ready", False)),
+        )
+        rows.append(row)
+        per_case.append(
+            {
+                "id": item_id,
+                "answerable": answerable,
+                "query": query,
+                f"{mode_name}_mode": row.outcome_mode,
+                f"{mode_name}_confidence": row.confidence,
+                f"{mode_name}_top_score": row.top_score,
+                f"{mode_name}_expected_hit": row.expected_hit,
+                f"{mode_name}_retrieval_mode_effective": row.retrieval_mode_effective,
+                f"{mode_name}_embedding_ready": row.embedding_ready,
+            }
+        )
+    return rows, per_case
+
+
 def main() -> int:
     args = _parse_args()
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M%S")
-    out_dir = (args.out_dir or (DEFAULT_OUT_ROOT / f"run_{stamp}")).resolve()
+    out_dir = (args.out_dir or (DEFAULT_OUT_ROOT / f"compare_{stamp}")).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     suite_raw = json.loads(args.suite.read_text(encoding="utf-8"))
-    items = suite_raw.get("items", [])
-    plugin = AgenticRagPlugin.from_json_path(
+    items = [x for x in suite_raw.get("items", []) if isinstance(x, dict)]
+
+    lexical = AgenticRagPlugin.from_json_path(
         args.corpus,
         config=AgenticRagConfig(
             min_retrieval_score=float(args.min_retrieval_score),
             min_confidence=float(args.min_confidence),
-            retrieval_mode=str(args.plugin_retrieval_mode),
-            embedding_enabled=bool(args.embedding_enabled),
+            retrieval_mode="lexical",
+            embedding_enabled=False,
+        ),
+    )
+    hybrid = AgenticRagPlugin.from_json_path(
+        args.corpus,
+        config=AgenticRagConfig(
+            min_retrieval_score=float(args.min_retrieval_score),
+            min_confidence=float(args.min_confidence),
+            retrieval_mode="hybrid",
+            embedding_enabled=True,
             embedding_base_url=str(args.embedding_base_url),
             embedding_model=str(args.embedding_model),
             embedding_timeout_ms=int(args.embedding_timeout_ms),
@@ -176,77 +202,25 @@ def main() -> int:
         ),
     )
 
-    rows_a: list[EvalRow] = []
-    rows_b: list[EvalRow] = []
-    all_rows: list[dict[str, Any]] = []
+    rows_lex, per_case_lex = _evaluate_mode(lexical, items, "lexical")
+    rows_hyb, per_case_hyb = _evaluate_mode(hybrid, items, "hybrid")
 
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-        item_id = str(item.get("id", ""))
-        query = str(item.get("query", ""))
-        answerable = bool(item.get("answerable", False))
-        expected = [str(k) for k in (item.get("expected_keywords") or [])]
+    merged_rows: list[dict[str, Any]] = []
+    for i in range(min(len(per_case_lex), len(per_case_hyb))):
+        merged = dict(per_case_lex[i])
+        merged.update(per_case_hyb[i])
+        merged_rows.append(merged)
 
-        baseline = _run_baseline(plugin, query)
-        expected_hit_a = _contains_any(str(baseline.get("answer", "")), expected)
-        row_a = EvalRow(
-            item_id=item_id,
-            answerable=answerable,
-            query=query,
-            mode_name="baseline",
-            outcome_mode=str(baseline.get("mode", "")),
-            confidence=float(baseline.get("confidence", 0.0)),
-            top_score=float((baseline.get("metrics") or {}).get("top_score", 0.0)),
-            answered=str(baseline.get("mode", "")) == "answer",
-            abstained=str(baseline.get("mode", "")) == "abstain",
-            expected_hit=expected_hit_a,
-        )
-        rows_a.append(row_a)
-
-        decision = plugin.decide(query)
-        expected_hit_b = _contains_any(decision.answer, expected)
-        row_b = EvalRow(
-            item_id=item_id,
-            answerable=answerable,
-            query=query,
-            mode_name="plugin",
-            outcome_mode=decision.mode,
-            confidence=decision.confidence,
-            top_score=float(decision.metrics.get("top_score", 0.0)),
-            answered=decision.mode == "answer",
-            abstained=decision.mode == "abstain",
-            expected_hit=expected_hit_b,
-        )
-        rows_b.append(row_b)
-
-        all_rows.append(
-            {
-                "id": item_id,
-                "answerable": answerable,
-                "query": query,
-                "baseline_mode": row_a.outcome_mode,
-                "baseline_confidence": row_a.confidence,
-                "baseline_top_score": row_a.top_score,
-                "baseline_expected_hit": row_a.expected_hit,
-                "plugin_mode": row_b.outcome_mode,
-                "plugin_confidence": row_b.confidence,
-                "plugin_top_score": row_b.top_score,
-                "plugin_expected_hit": row_b.expected_hit,
-                "plugin_retrieval_mode_effective": decision.metrics.get("retrieval_mode_effective"),
-                "plugin_embedding_ready": decision.metrics.get("embedding_ready"),
-            }
-        )
-
-    a = _metrics(rows_a)
-    b = _metrics(rows_b)
+    lex_metrics = _metrics(rows_lex)
+    hyb_metrics = _metrics(rows_hyb)
     delta = {
-        key: round(float(b.get(key, 0.0)) - float(a.get(key, 0.0)), 4)
+        key: round(float(hyb_metrics.get(key, 0.0)) - float(lex_metrics.get(key, 0.0)), 4)
         for key in (
             "grounded_answer_rate_on_answerable",
             "abstain_on_answerable_rate",
             "abstain_on_unanswerable_rate",
             "hallucination_rate_on_unanswerable",
+            "mean_confidence",
         )
     }
 
@@ -254,38 +228,33 @@ def main() -> int:
         "generated_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "suite": args.suite.as_posix(),
         "corpus": args.corpus.as_posix(),
-        "plugin_config": {
+        "compare_config": {
             "min_retrieval_score": float(args.min_retrieval_score),
             "min_confidence": float(args.min_confidence),
-            "retrieval_mode": str(args.plugin_retrieval_mode),
-            "embedding_enabled": bool(args.embedding_enabled),
             "embedding_base_url": str(args.embedding_base_url),
             "embedding_model": str(args.embedding_model),
             "embedding_timeout_ms": int(args.embedding_timeout_ms),
             "hybrid_lexical_weight": float(args.hybrid_lexical_weight),
             "hybrid_min_lexical_score": float(args.hybrid_min_lexical_score),
         },
-        "rows": len(all_rows),
-        "baseline": a,
-        "plugin": b,
-        "delta_plugin_minus_baseline": delta,
+        "rows": len(merged_rows),
+        "lexical": lex_metrics,
+        "hybrid": hyb_metrics,
+        "delta_hybrid_minus_lexical": delta,
     }
 
     with (out_dir / "per_case.csv").open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(all_rows[0].keys()) if all_rows else [])
-        if all_rows:
+        writer = csv.DictWriter(handle, fieldnames=list(merged_rows[0].keys()) if merged_rows else [])
+        if merged_rows:
             writer.writeheader()
-            writer.writerows(all_rows)
+            writer.writerows(merged_rows)
 
     (out_dir / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     (out_dir / "report.md").write_text(_render_report(summary), encoding="utf-8")
 
     print(f"Run dir: {out_dir.as_posix()}")
     print(f"Rows: {summary['rows']}")
-    print(
-        "Delta abstain_on_unanswerable_rate:",
-        summary["delta_plugin_minus_baseline"]["abstain_on_unanswerable_rate"],
-    )
+    print("Delta grounded_answer_rate_on_answerable:", summary["delta_hybrid_minus_lexical"]["grounded_answer_rate_on_answerable"])
     return 0
 
 

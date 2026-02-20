@@ -8,7 +8,7 @@ Provide a model-independent retrieval layer with confidence gating, so local age
 
 - Input: natural-language `query`
 - Output: structured decision with `mode = answer|abstain`
-- Retrieval source: local indexed corpus
+- Retrieval source: local indexed corpus (`lexical` or `hybrid`)
 - Integration target: OpenClaw tool-call path
 
 ## Contract
@@ -40,7 +40,10 @@ Response:
     "top_score": 0.8,
     "mean_top2": 0.73,
     "evidence_chars": 640,
-    "hits": 3
+    "hits": 3,
+    "retrieval_mode_effective": "hybrid",
+    "embedding_ready": true,
+    "hybrid_min_lexical_score": 0.1
   }
 }
 ```
@@ -51,6 +54,8 @@ Response:
 - Keep abstain explicit and non-empty.
 - Keep evidence snippets traceable (`doc_id`, `source`).
 - Keep retrieval and generation separable.
+- Keep lexical fallback active if semantic stream is unavailable.
+- In hybrid mode, optionally require lexical anchor (`hybrid_min_lexical_score > 0`) to block semantic-only false positives.
 
 ## A/B Metrics
 
@@ -64,4 +69,3 @@ Response:
 - Improve `abstain_on_unanswerable_rate` by at least `+0.25` vs baseline.
 - Keep `abstain_on_answerable_rate <= 0.15`.
 - No regression in grounded answer quality on answerable prompts > `0.10`.
-

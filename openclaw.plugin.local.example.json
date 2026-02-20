@@ -1,0 +1,36 @@
+{
+  "plugins": {
+    "load": {
+      "paths": [
+        "D:/GitHub/Yggdrasil/Mini-World/exports/openclaw-agentic-rag-plugin"
+      ]
+    },
+    "entries": {
+      "agentic-rag": {
+        "enabled": true,
+        "config": {
+          "pythonBin": "python",
+          "retrievalMode": "hybrid",
+          "embeddingEnabled": true,
+          "embeddingBaseUrl": "http://192.168.178.44:1234/v1",
+          "embeddingModel": "text-embedding-nomic-embed-text-v1.5",
+          "embeddingTimeoutMs": 10000,
+          "hybridLexicalWeight": 0.35,
+          "hybridMinLexicalScore": 0.10,
+          "corpusPath": "data/corpus_demo.json",
+          "minRetrievalScore": 0.12,
+          "minConfidence": 0.12,
+          "topK": 4,
+          "maxContextChars": 1400,
+          "timeoutMs": 15000
+        }
+      }
+    }
+  },
+  "tools": {
+    "allow": [
+      "group:core",
+      "agentic_rag"
+    ]
+  }
+}

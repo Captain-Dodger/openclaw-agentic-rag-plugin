@@ -23,6 +23,48 @@
         "description": "Plugin-relative path to bridge script.",
         "default": "bridge/run_agentic_rag_tool.py"
       },
+      "retrievalMode": {
+        "type": "string",
+        "enum": [
+          "lexical",
+          "hybrid"
+        ],
+        "default": "lexical",
+        "description": "Retrieval mode for Python core. Use hybrid to enable lexical+semantic fusion."
+      },
+      "embeddingEnabled": {
+        "type": "boolean",
+        "default": false,
+        "description": "Enable embedding-backed semantic retrieval stream."
+      },
+      "embeddingBaseUrl": {
+        "type": "string",
+        "description": "OpenAI-compatible embeddings base URL, e.g. http://127.0.0.1:1234/v1."
+      },
+      "embeddingModel": {
+        "type": "string",
+        "description": "Embedding model id used by embedding endpoint."
+      },
+      "embeddingTimeoutMs": {
+        "type": "integer",
+        "minimum": 500,
+        "maximum": 120000,
+        "default": 10000
+      },
+      "hybridLexicalWeight": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0.35,
+        "description": "Weight of lexical score in hybrid fusion. Semantic weight is (1 - lexical)."
+      },
+      "hybridMinLexicalScore": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0.0,
+        "description": "Optional lexical floor for hybrid hits. Semantic-only matches below this lexical score are dropped."
+      },
       "corpusPath": {
         "type": "string",
         "description": "Path to retrieval corpus JSON."

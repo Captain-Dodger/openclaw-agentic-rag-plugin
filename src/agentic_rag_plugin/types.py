@@ -17,6 +17,8 @@ class RetrievalHit:
     source: str
     score: float
     text: str
+    lexical_score: float | None = None
+    semantic_score: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -36,4 +38,3 @@ class RagDecision:
         out = asdict(self)
         out["hits"] = [h.as_dict() for h in self.hits]
         return out
-

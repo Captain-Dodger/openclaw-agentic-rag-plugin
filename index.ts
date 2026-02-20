@@ -5,6 +5,13 @@ type PluginCfg = {
   pythonBin?: string;
   workingDir?: string;
   bridgeScript?: string;
+  retrievalMode?: "lexical" | "hybrid";
+  embeddingEnabled?: boolean;
+  embeddingBaseUrl?: string;
+  embeddingModel?: string;
+  embeddingTimeoutMs?: number;
+  hybridLexicalWeight?: number;
+  hybridMinLexicalScore?: number;
   corpusPath?: string;
   minRetrievalScore?: number;
   minConfidence?: number;
@@ -37,6 +44,13 @@ function resolveConfig(api: any): Required<Pick<PluginCfg, "enabled" | "pythonBi
         : 15000,
     workingDir: cfg.workingDir,
     corpusPath: cfg.corpusPath,
+    retrievalMode: cfg.retrievalMode,
+    embeddingEnabled: cfg.embeddingEnabled,
+    embeddingBaseUrl: cfg.embeddingBaseUrl,
+    embeddingModel: cfg.embeddingModel,
+    embeddingTimeoutMs: cfg.embeddingTimeoutMs,
+    hybridLexicalWeight: cfg.hybridLexicalWeight,
+    hybridMinLexicalScore: cfg.hybridMinLexicalScore,
     minRetrievalScore: cfg.minRetrievalScore,
     minConfidence: cfg.minConfidence,
     topK: cfg.topK,
@@ -168,6 +182,13 @@ const plugin = {
             query,
             pluginConfig: {
               corpusPath: cfg.corpusPath,
+              retrievalMode: cfg.retrievalMode,
+              embeddingEnabled: cfg.embeddingEnabled,
+              embeddingBaseUrl: cfg.embeddingBaseUrl,
+              embeddingModel: cfg.embeddingModel,
+              embeddingTimeoutMs: cfg.embeddingTimeoutMs,
+              hybridLexicalWeight: cfg.hybridLexicalWeight,
+              hybridMinLexicalScore: cfg.hybridMinLexicalScore,
               minRetrievalScore: cfg.minRetrievalScore,
               minConfidence: cfg.minConfidence,
               topK: cfg.topK,

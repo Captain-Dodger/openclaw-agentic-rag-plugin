@@ -52,6 +52,13 @@ Configured under `plugins.entries["agentic-rag"].config`:
 
 | Plugin config key | Bridge key | Python config key |
 | --- | --- | --- |
+| `retrievalMode` | `pluginConfig.retrievalMode` | `retrieval_mode` |
+| `embeddingEnabled` | `pluginConfig.embeddingEnabled` | `embedding_enabled` |
+| `embeddingBaseUrl` | `pluginConfig.embeddingBaseUrl` | `embedding_base_url` |
+| `embeddingModel` | `pluginConfig.embeddingModel` | `embedding_model` |
+| `embeddingTimeoutMs` | `pluginConfig.embeddingTimeoutMs` | `embedding_timeout_ms` |
+| `hybridLexicalWeight` | `pluginConfig.hybridLexicalWeight` | `hybrid_lexical_weight` |
+| `hybridMinLexicalScore` | `pluginConfig.hybridMinLexicalScore` | `hybrid_min_lexical_score` |
 | `corpusPath` | `pluginConfig.corpusPath` | corpus path passed to `from_json_path(...)` |
 | `minRetrievalScore` | `pluginConfig.minRetrievalScore` | `min_retrieval_score` |
 | `minConfidence` | `pluginConfig.minConfidence` | `min_confidence` |

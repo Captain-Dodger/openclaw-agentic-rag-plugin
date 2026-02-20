@@ -25,6 +25,8 @@ That behavior is measurable via A/B.
 For each query:
 
 1. retrieve top-k local hits
+   - lexical mode: token overlap + phrase boost
+   - hybrid mode: lexical + embedding cosine fusion
 2. compute a confidence score from retrieval quality
 3. apply thresholds:
    - `min_retrieval_score`
@@ -60,6 +62,12 @@ Response includes:
         enabled: true,
         config: {
           pythonBin: "python",
+          retrievalMode: "hybrid",
+          embeddingEnabled: true,
+          embeddingBaseUrl: "http://127.0.0.1:1234/v1",
+          embeddingModel: "text-embedding-nomic-embed-text-v1.5",
+          hybridLexicalWeight: 0.35,
+          hybridMinLexicalScore: 0.10,
           corpusPath: "data/corpus_demo.json",
           minRetrievalScore: 0.12,
           minConfidence: 0.12,
@@ -80,6 +88,8 @@ Notes:
 
 - `agentic_rag` is registered as an **optional** plugin tool.
 - Relative paths in plugin config are resolved against plugin root.
+- Ready-to-copy local config preset:
+  - `openclaw.plugin.local.example.json`
 - Endpoint-level mapping and ready-to-run examples:
   - `docs/openclaw_endpoint_mapping.md`
 
@@ -100,6 +110,37 @@ python tools/run_openclaw_agentic_rag_ab.py \
   --corpus data/corpus_demo.json \
   --min-retrieval-score 0.12 \
   --min-confidence 0.12
+```
+
+### Hybrid mode (embeddings enabled)
+
+```bash
+python tools/run_openclaw_agentic_rag_ab.py \
+  --suite assays/openclaw_agentic_rag_ab_suite_v1.json \
+  --corpus data/corpus_demo.json \
+  --plugin-retrieval-mode hybrid \
+  --embedding-enabled \
+  --embedding-base-url http://127.0.0.1:1234/v1 \
+  --embedding-model text-embedding-nomic-embed-text-v1.5 \
+  --hybrid-lexical-weight 0.35 \
+  --hybrid-min-lexical-score 0.10 \
+  --min-retrieval-score 0.12 \
+  --min-confidence 0.12
+```
+
+`--hybrid-min-lexical-score` is the anti-overreach knob for hybrid mode:
+it drops semantic-only hits that have weak lexical anchor.
+
+### Lexical vs hybrid compare
+
+```bash
+python tools/run_openclaw_agentic_rag_retrieval_compare.py \
+  --suite assays/openclaw_agentic_rag_ab_suite_v1.json \
+  --corpus data/corpus_demo.json \
+  --embedding-base-url http://127.0.0.1:1234/v1 \
+  --embedding-model text-embedding-nomic-embed-text-v1.5 \
+  --hybrid-lexical-weight 0.35 \
+  --hybrid-min-lexical-score 0.10
 ```
 
 Outputs:
@@ -126,6 +167,7 @@ This is a small demo suite, not a production claim.
 - `index.ts` OpenClaw tool adapter
 - `bridge/run_agentic_rag_tool.py` Python bridge entrypoint
 - `tools/run_openclaw_agentic_rag_ab.py` A/B runner
+- `tools/run_openclaw_agentic_rag_retrieval_compare.py` lexical vs hybrid compare
 - `assays/openclaw_agentic_rag_ab_suite_v1.json` sample suite
 - `data/corpus_demo.json` sample corpus
 - `docs/openclaw_agentic_rag_plugin_spec.md` protocol/spec
@@ -133,7 +175,9 @@ This is a small demo suite, not a production claim.
 
 ## Limitations
 
-- Retrieval is lexical/scaffold-level (not embedding search yet).
+- Hybrid mode requires an OpenAI-compatible embedding endpoint.
+- With hybrid mode, semantic-only matches can over-answer if no lexical anchor is enforced.
+- Large corpora should use a persistent vector index (current v0 computes in-memory vectors).
 - Baseline in A/B is intentionally naive.
 - No network retrieval in this repo.
 - Thresholds are corpus-dependent and must be tuned.
