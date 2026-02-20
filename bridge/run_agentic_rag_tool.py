@@ -122,7 +122,7 @@ def main() -> int:
             return 3
 
         rag_cfg = _config_from_plugin_config(plugin_cfg)
-        plugin = AgenticRagPlugin.from_json_path(corpus_path, config=rag_cfg)
+        plugin = AgenticRagPlugin.from_path(corpus_path, config=rag_cfg)
         decision = plugin.decide(query)
         result = decision.as_dict()
         result["tool"] = "agentic_rag"

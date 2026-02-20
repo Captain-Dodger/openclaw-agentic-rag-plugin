@@ -67,7 +67,7 @@
       },
       "corpusPath": {
         "type": "string",
-        "description": "Path to retrieval corpus JSON."
+        "description": "Path to retrieval source (JSON corpus file or folder with txt/md/pdf/odt files)."
       },
       "minRetrievalScore": {
         "type": "number",

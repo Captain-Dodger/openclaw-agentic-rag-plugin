@@ -1,33 +1,32 @@
 [
   {
-    "id": "contracts_meaning_trace",
-    "source": "contracts_v1",
-    "text": "meaning_trace_v1 tracks signals, interpretation, decision, and outcome per tick."
+    "id": "metric_abstain_unknown",
+    "source": "eval_metrics",
+    "text": "abstain_on_unanswerable_rate measures how often the system declines unknown questions instead of guessing."
   },
   {
-    "id": "contracts_error_echo",
-    "source": "contracts_v1",
-    "text": "ACTION_ERROR_ECHO_MAP maps tool error results into world-facing interpreted echo strings."
+    "id": "metric_abstain_answerable",
+    "source": "eval_metrics",
+    "text": "abstain_on_answerable_rate should stay low; high values indicate over-refusal on answerable items."
   },
   {
-    "id": "nethaq_affect_flag",
-    "source": "nethaq_config",
-    "text": "plutchik_affect_enabled toggles interpreted affect overlays while raw world data stays separate."
+    "id": "metric_hallucination_unknown",
+    "source": "eval_metrics",
+    "text": "hallucination_rate_on_unanswerable tracks wrong answers on unanswerable prompts and should be near zero."
   },
   {
-    "id": "hb01_metric_unknown",
-    "source": "hb01_assay",
-    "text": "abstain_on_unanswerable_rate measures how often the model declines to invent answers for unknown prompts."
+    "id": "retrieval_modes",
+    "source": "plugin_config",
+    "text": "retrievalMode supports lexical and hybrid. Hybrid combines lexical matching with embedding similarity."
   },
   {
-    "id": "hb01_metric_answerable",
-    "source": "hb01_assay",
-    "text": "abstain_on_answerable_rate should be low to avoid unnecessary refusal on questions that are answerable."
+    "id": "hybrid_lexical_floor",
+    "source": "plugin_config",
+    "text": "hybridMinLexicalScore sets a lexical anchor floor so semantic-only matches can be filtered."
   },
   {
-    "id": "nethaq_source_streams",
-    "source": "nethaq_ab",
-    "text": "source attribution uses three streams: world_field_stream, nethaq_overlay, and user_message_stream."
+    "id": "tool_contract",
+    "source": "tool_contract",
+    "text": "agentic_rag returns mode, confidence, answer, rationale, context, hits, and metrics."
   }
 ]
-

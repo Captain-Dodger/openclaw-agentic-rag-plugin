@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "pythonBin": "python",
+  "retrievalMode": "hybrid",
+  "embeddingEnabled": true,
+  "embeddingBaseUrl": "http://127.0.0.1:1234/v1",
+  "embeddingModel": "text-embedding-nomic-embed-text-v1.5",
+  "embeddingTimeoutMs": 10000,
+  "hybridLexicalWeight": 0.35,
+  "hybridMinLexicalScore": 0.1,
+  "corpusPath": "data/corpus_demo.json",
+  "minRetrievalScore": 0.12,
+  "minConfidence": 0.12,
+  "topK": 4,
+  "maxContextChars": 1400,
+  "timeoutMs": 15000
+}

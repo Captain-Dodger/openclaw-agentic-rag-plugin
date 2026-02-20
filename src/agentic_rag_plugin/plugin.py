@@ -9,11 +9,13 @@ from typing import Any
 from urllib import error as urlerror
 from urllib import request as urlrequest
 
+from .corpus_loader import load_documents_from_source
 from .config import AgenticRagConfig
 from .types import Document, RagDecision, RetrievalHit
 
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9_]+", re.UNICODE)
+CAMEL_BOUNDARY_RE = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 
 
 def _clamp(value: float, lo: float, hi: float) -> float:
@@ -21,11 +23,30 @@ def _clamp(value: float, lo: float, hi: float) -> float:
 
 
 def _normalize(text: str) -> str:
-    return " ".join((text or "").casefold().split())
+    raw = text or ""
+    # Improve lexical recall for config/docs identifiers like retrievalMode, foo-bar, path/value.
+    raw = CAMEL_BOUNDARY_RE.sub(" ", raw)
+    raw = raw.replace("-", " ").replace("/", " ").replace(".", " ")
+    return " ".join(raw.casefold().split())
+
+
+def _token_variants(token: str) -> set[str]:
+    out = {token}
+    # Lightweight inflection handling keeps lexical mode robust on "mode" vs "modes".
+    if len(token) > 3 and token.endswith("ies"):
+        out.add(token[:-3] + "y")
+    if len(token) > 3 and token.endswith("s") and not token.endswith("ss"):
+        out.add(token[:-1])
+    return out
 
 
 def _tokens(text: str) -> set[str]:
-    return {t for t in TOKEN_RE.findall(_normalize(text)) if t}
+    out: set[str] = set()
+    for token in TOKEN_RE.findall(_normalize(text)):
+        if not token:
+            continue
+        out.update(_token_variants(token))
+    return out
 
 
 def _score(query: str, doc: str) -> float:
@@ -143,16 +164,23 @@ class AgenticRagPlugin:
     def from_json_path(
         cls, path: str | Path, config: AgenticRagConfig | None = None
     ) -> "AgenticRagPlugin":
-        raw = json.loads(Path(path).read_text(encoding="utf-8"))
-        docs = [
-            Document(
-                id=str(item.get("id", "")),
-                text=str(item.get("text", "")),
-                source=str(item.get("source", "unknown")),
-            )
-            for item in raw
-            if isinstance(item, dict)
-        ]
+        docs = load_documents_from_source(path)
+        return cls(docs, config=config)
+
+    @classmethod
+    def from_path(
+        cls,
+        path: str | Path,
+        config: AgenticRagConfig | None = None,
+        *,
+        chunk_chars: int = 1200,
+        overlap_chars: int = 120,
+    ) -> "AgenticRagPlugin":
+        docs = load_documents_from_source(
+            path,
+            chunk_chars=chunk_chars,
+            overlap_chars=overlap_chars,
+        )
         return cls(docs, config=config)
 
     def _set_retrieval_meta(self, **kwargs: Any) -> None:

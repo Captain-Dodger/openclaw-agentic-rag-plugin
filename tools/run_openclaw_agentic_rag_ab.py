@@ -161,7 +161,7 @@ def main() -> int:
 
     suite_raw = json.loads(args.suite.read_text(encoding="utf-8"))
     items = suite_raw.get("items", [])
-    plugin = AgenticRagPlugin.from_json_path(
+    plugin = AgenticRagPlugin.from_path(
         args.corpus,
         config=AgenticRagConfig(
             min_retrieval_score=float(args.min_retrieval_score),

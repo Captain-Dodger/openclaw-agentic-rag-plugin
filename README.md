@@ -1,24 +1,19 @@
 # OpenClaw Agentic RAG Plugin (MIT)
 
-Model-agnostic retrieval plugin scaffold with confidence-gated abstention.
+OpenClaw plugin scaffold for retrieval-gated answering.
 
-This repo now ships a **clean adapter layer**:
+The repository contains:
 
 - OpenClaw-native plugin surface (`openclaw.plugin.json`, `index.ts`)
-- Python core preserved as-is (`src/agentic_rag_plugin/*`)
-- Thin bridge between both (`bridge/run_agentic_rag_tool.py`)
+- Python retrieval core (`src/agentic_rag_plugin/*`)
+- Bridge process (`bridge/run_agentic_rag_tool.py`)
 
-Goal: keep your own logic style while docking cleanly into OpenClaw.
+## What it does
 
-## Why this exists
-
-Agent tool chains often force a response even when evidence is weak.  
-This plugin separates two paths:
+The plugin separates two paths:
 
 - `answer` when retrieval evidence is strong enough
 - `abstain` when evidence is weak
-
-That behavior is measurable via A/B.
 
 ## Core behavior
 
@@ -40,6 +35,17 @@ Response includes:
 - `hits` with `doc_id`, `source`, `score`
 - `metrics` (`top_score`, `mean_top2`, `evidence_chars`, `hits`)
 
+## Corpus source modes
+
+`corpusPath` can point to:
+
+- a JSON corpus file (`[{id, source, text}, ...]`)
+- a folder (recursive ingest) with supported files:
+  - `.txt`, `.md`, `.markdown`, `.rst`, `.log`, `.pdf`, `.odt`
+
+PDF extraction is optional and requires `pypdf` to be installed in your Python environment.
+ODT extraction uses built-in XML parsing.
+
 ## OpenClaw adapter layer
 
 ### Files
@@ -48,6 +54,52 @@ Response includes:
 - `package.json`: declares OpenClaw extension entrypoint
 - `index.ts`: registers optional tool `agentic_rag`
 - `bridge/run_agentic_rag_tool.py`: executes Python RAG core and returns JSON
+
+## Installation (OpenClaw standard setup)
+
+1. Clone this repository.
+2. Install Python package (recommended in virtualenv):
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+3. Add plugin path to your OpenClaw config:
+
+```json5
+{
+  plugins: {
+    load: {
+      paths: ["D:/path/to/openclaw-agentic-rag-plugin"]
+    }
+  }
+}
+```
+
+4. Add plugin entry config:
+- Start from one of:
+  - `configs/plugin.entry.lexical.example.json`
+  - `configs/plugin.entry.hybrid.lmstudio.example.json`
+  - `configs/plugin.entry.hybrid.openai-compatible.example.json`
+
+5. Allow tool `agentic_rag` in your tool policy.
+
+6. Restart OpenClaw gateway.
+
+### Gateway token (for authenticated `/tools/invoke` tests)
+
+Set a gateway token in your OpenClaw environment (example):
+
+```bash
+mkdir -p ~/.openclaw
+cat >> ~/.openclaw/.env <<'EOF'
+OPENCLAW_GATEWAY_TOKEN=replace-with-a-long-random-token
+EOF
+```
+
+Then restart the OpenClaw gateway process so it picks up the new env value.
 
 ### OpenClaw config example
 
@@ -90,6 +142,12 @@ Notes:
 - Relative paths in plugin config are resolved against plugin root.
 - Ready-to-copy local config preset:
   - `openclaw.plugin.local.example.json`
+- Endpoint/profile presets (easy to edit):
+  - `configs/plugin.entry.lexical.example.json`
+  - `configs/plugin.entry.hybrid.lmstudio.example.json`
+  - `configs/plugin.entry.hybrid.openai-compatible.example.json`
+- Folder-to-JSON helper:
+  - `tools/build_corpus_from_folder.py`
 - Endpoint-level mapping and ready-to-run examples:
   - `docs/openclaw_endpoint_mapping.md`
 
@@ -110,6 +168,61 @@ python tools/run_openclaw_agentic_rag_ab.py \
   --corpus data/corpus_demo.json \
   --min-retrieval-score 0.12 \
   --min-confidence 0.12
+```
+
+### Build corpus from folder (RAG-style)
+
+```bash
+python tools/build_corpus_from_folder.py \
+  --input /path/to/knowledge_folder \
+  --output data/corpus_from_folder.json \
+  --chunk-chars 1200 \
+  --overlap-chars 120
+```
+
+Then set plugin config:
+
+```json5
+{
+  corpusPath: "data/corpus_from_folder.json"
+}
+```
+
+Or point directly to a folder:
+
+```json5
+{
+  corpusPath: "D:/path/to/knowledge_folder"
+}
+```
+
+### Smoke test against OpenClaw gateway
+
+```bash
+curl -sS http://127.0.0.1:18789/tools/invoke \
+  -H "Authorization: Bearer YOUR_GATEWAY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tool": "agentic_rag",
+    "args": {"query": "Which retrieval modes are supported?"},
+    "sessionKey": "main"
+  }'
+```
+
+If this returns `{"error":{"message":"Unauthorized"...}}`, the gateway is reachable and you only need a valid token.
+
+### Bridge smoke (no gateway auth required)
+
+```bash
+printf '%s' '{
+  "query":"Which retrieval modes are supported?",
+  "pluginConfig":{
+    "corpusPath":"data/corpus_demo.json",
+    "minRetrievalScore":0.12,
+    "minConfidence":0.12,
+    "topK":4
+  }
+}' | python bridge/run_agentic_rag_tool.py
 ```
 
 ### Hybrid mode (embeddings enabled)
@@ -149,17 +262,15 @@ Outputs:
 - `results/openclaw_agentic_rag_runs/<run_id>/report.md`
 - `results/openclaw_agentic_rag_runs/<run_id>/per_case.csv`
 
-## Benchmark snapshot (demo suite)
+## Evaluation output
 
-From `results/openclaw_agentic_rag_runs/run_20260219_231559/summary.json`:
+Run artifacts are written to:
 
-- baseline `abstain_on_unanswerable_rate`: `0.0`
-- plugin `abstain_on_unanswerable_rate`: `1.0`
-- baseline `hallucination_rate_on_unanswerable`: `1.0`
-- plugin `hallucination_rate_on_unanswerable`: `0.0`
-- `grounded_answer_rate_on_answerable`: unchanged (`1.0 -> 1.0`)
+- `results/openclaw_agentic_rag_runs/<run_id>/summary.json`
+- `results/openclaw_agentic_rag_runs/<run_id>/report.md`
+- `results/openclaw_agentic_rag_runs/<run_id>/per_case.csv`
 
-This is a small demo suite, not a production claim.
+Treat demo-suite results as local verification, not as universal performance claims.
 
 ## Repository layout
 

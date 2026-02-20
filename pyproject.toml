@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-  { name = "Yggdrasil Mini-World Contributors" }
+  { name = "OpenClaw Agentic RAG Contributors" }
 ]
 dependencies = []
 
@@ -19,4 +19,3 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
-

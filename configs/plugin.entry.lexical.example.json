@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "pythonBin": "python",
+  "retrievalMode": "lexical",
+  "embeddingEnabled": false,
+  "corpusPath": "data/corpus_demo.json",
+  "minRetrievalScore": 0.12,
+  "minConfidence": 0.12,
+  "topK": 4,
+  "maxContextChars": 1400,
+  "timeoutMs": 15000
+}

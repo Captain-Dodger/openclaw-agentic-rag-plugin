@@ -178,7 +178,7 @@ def main() -> int:
     suite_raw = json.loads(args.suite.read_text(encoding="utf-8"))
     items = [x for x in suite_raw.get("items", []) if isinstance(x, dict)]
 
-    lexical = AgenticRagPlugin.from_json_path(
+    lexical = AgenticRagPlugin.from_path(
         args.corpus,
         config=AgenticRagConfig(
             min_retrieval_score=float(args.min_retrieval_score),
@@ -187,7 +187,7 @@ def main() -> int:
             embedding_enabled=False,
         ),
     )
-    hybrid = AgenticRagPlugin.from_json_path(
+    hybrid = AgenticRagPlugin.from_path(
         args.corpus,
         config=AgenticRagConfig(
             min_retrieval_score=float(args.min_retrieval_score),

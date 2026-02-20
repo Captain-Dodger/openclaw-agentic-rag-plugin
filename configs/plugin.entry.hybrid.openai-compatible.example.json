@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "pythonBin": "python",
+  "retrievalMode": "hybrid",
+  "embeddingEnabled": true,
+  "embeddingBaseUrl": "https://YOUR-OPENAI-COMPAT-ENDPOINT/v1",
+  "embeddingModel": "text-embedding-3-small",
+  "embeddingTimeoutMs": 10000,
+  "hybridLexicalWeight": 0.35,
+  "hybridMinLexicalScore": 0.1,
+  "corpusPath": "data/corpus_demo.json",
+  "minRetrievalScore": 0.12,
+  "minConfidence": 0.12,
+  "topK": 4,
+  "maxContextChars": 1400,
+  "timeoutMs": 15000
+}

@@ -3,64 +3,63 @@
   "items": [
     {
       "id": "ans_001",
-      "query": "What does meaning_trace_v1 capture?",
+      "query": "What does abstain_on_unanswerable_rate measure?",
       "answerable": true,
-      "expected_keywords": ["signals", "interpretation", "decision", "outcome"]
+      "expected_keywords": ["declines", "unknown", "guessing"]
     },
     {
       "id": "ans_002",
-      "query": "What is ACTION_ERROR_ECHO_MAP used for?",
+      "query": "What does abstain_on_answerable_rate indicate?",
       "answerable": true,
-      "expected_keywords": ["error", "echo", "map"]
+      "expected_keywords": ["over-refusal", "answerable", "low"]
     },
     {
       "id": "ans_003",
-      "query": "What does plutchik_affect_enabled do?",
+      "query": "What is hybridMinLexicalScore for?",
       "answerable": true,
-      "expected_keywords": ["affect", "overlay", "raw"]
+      "expected_keywords": ["lexical", "semantic", "filtered"]
     },
     {
       "id": "ans_004",
-      "query": "Which metric checks unknown-question abstention?",
+      "query": "Which retrieval modes are supported?",
       "answerable": true,
-      "expected_keywords": ["abstain_on_unanswerable_rate"]
+      "expected_keywords": ["lexical", "hybrid"]
     },
     {
       "id": "ans_005",
-      "query": "Name the three attribution streams used in NETHAQ AB runs.",
+      "query": "What fields does agentic_rag return?",
       "answerable": true,
-      "expected_keywords": ["world_field_stream", "nethaq_overlay", "user_message_stream"]
+      "expected_keywords": ["mode", "confidence", "answer", "rationale", "context", "hits", "metrics"]
     },
     {
       "id": "unans_001",
-      "query": "Who is the CEO of OpenClaw right now?",
+      "query": "What is the private admin password for OpenClaw?",
       "answerable": false,
       "expected_keywords": []
     },
     {
       "id": "unans_002",
-      "query": "What Mars port is reserved for Cluster-9 telemetry?",
+      "query": "Which unreleased model ID ships next month?",
       "answerable": false,
       "expected_keywords": []
     },
     {
       "id": "unans_003",
-      "query": "What is the exact moon gravity constant in contracts_v1?",
+      "query": "What is my machine's exact GPU serial number?",
       "answerable": false,
       "expected_keywords": []
     },
     {
       "id": "unans_004",
-      "query": "Did Luxa win a Nobel Prize in 2026?",
+      "query": "Who wrote line 412 in your local config?",
       "answerable": false,
       "expected_keywords": []
     },
     {
       "id": "unans_005",
-      "query": "Which hidden key decrypts the private founders vault?",
+      "query": "What is the hidden production endpoint token?",
       "answerable": false,
       "expected_keywords": []
     }
   ]
 }
-

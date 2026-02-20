@@ -18,7 +18,7 @@ Request:
 ```json
 {
   "tool": "agentic_rag",
-  "query": "What does meaning_trace_v1 capture?"
+  "query": "What does abstain_on_unanswerable_rate measure?"
 }
 ```
 
@@ -27,7 +27,7 @@ Response:
 ```json
 {
   "tool": "agentic_rag",
-  "query": "What does meaning_trace_v1 capture?",
+  "query": "What does abstain_on_unanswerable_rate measure?",
   "mode": "answer",
   "confidence": 0.72,
   "answer": "Grounded answer from retrieved evidence: ...",

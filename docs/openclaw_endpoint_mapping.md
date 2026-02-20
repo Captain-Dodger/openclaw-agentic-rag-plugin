@@ -23,10 +23,10 @@ Recommendation:
 {
   "tool": "agentic_rag",
   "args": {
-    "query": "What does meaning_trace_v1 track?",
+    "query": "What does abstain_on_unanswerable_rate measure?",
     "state": {
       "tick": 42,
-      "agent": "luxa"
+      "agent": "alpha"
     }
   },
   "sessionKey": "main"
@@ -59,7 +59,7 @@ Configured under `plugins.entries["agentic-rag"].config`:
 | `embeddingTimeoutMs` | `pluginConfig.embeddingTimeoutMs` | `embedding_timeout_ms` |
 | `hybridLexicalWeight` | `pluginConfig.hybridLexicalWeight` | `hybrid_lexical_weight` |
 | `hybridMinLexicalScore` | `pluginConfig.hybridMinLexicalScore` | `hybrid_min_lexical_score` |
-| `corpusPath` | `pluginConfig.corpusPath` | corpus path passed to `from_json_path(...)` |
+| `corpusPath` | `pluginConfig.corpusPath` | corpus source path passed to `from_path(...)` (JSON file or folder) |
 | `minRetrievalScore` | `pluginConfig.minRetrievalScore` | `min_retrieval_score` |
 | `minConfidence` | `pluginConfig.minConfidence` | `min_confidence` |
 | `topK` | `pluginConfig.topK` | `top_k` |
@@ -123,7 +123,7 @@ curl -sS http://127.0.0.1:18789/tools/invoke \
   -d '{
     "tool": "agentic_rag",
     "args": {
-      "query": "What does meaning_trace_v1 track?"
+      "query": "What does abstain_on_unanswerable_rate measure?"
     },
     "sessionKey": "main"
   }'
@@ -138,7 +138,7 @@ curl -sS http://127.0.0.1:18789/v1/chat/completions \
   -d '{
     "model": "openclaw:main",
     "messages": [
-      {"role": "user", "content": "Use agentic_rag to answer what meaning_trace_v1 tracks."}
+      {"role": "user", "content": "Use agentic_rag to explain abstain_on_unanswerable_rate."}
     ]
   }'
 ```
@@ -151,7 +151,7 @@ curl -sS http://127.0.0.1:18789/v1/responses \
   -H "Content-Type: application/json" \
   -d '{
     "model": "openclaw:main",
-    "input": "Use agentic_rag to answer what meaning_trace_v1 tracks."
+    "input": "Use agentic_rag to explain abstain_on_unanswerable_rate."
   }'
 ```
 
