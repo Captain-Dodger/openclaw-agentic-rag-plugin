@@ -18,6 +18,12 @@ type PluginCfg = {
   topK?: number;
   maxContextChars?: number;
   abstainMessage?: string;
+  arbiterEnabled?: boolean;
+  arbiterSharedLabel?: string;
+  arbiterMinEvidenceChars?: number;
+  arbiterHighImpactMargin?: number;
+  arbiterAllowRefine?: boolean;
+  arbiterFailClosedOnConflict?: boolean;
   timeoutMs?: number;
 };
 
@@ -56,6 +62,12 @@ function resolveConfig(api: any): Required<Pick<PluginCfg, "enabled" | "pythonBi
     topK: cfg.topK,
     maxContextChars: cfg.maxContextChars,
     abstainMessage: cfg.abstainMessage,
+    arbiterEnabled: cfg.arbiterEnabled,
+    arbiterSharedLabel: cfg.arbiterSharedLabel,
+    arbiterMinEvidenceChars: cfg.arbiterMinEvidenceChars,
+    arbiterHighImpactMargin: cfg.arbiterHighImpactMargin,
+    arbiterAllowRefine: cfg.arbiterAllowRefine,
+    arbiterFailClosedOnConflict: cfg.arbiterFailClosedOnConflict,
   };
 }
 
@@ -194,6 +206,12 @@ const plugin = {
               topK: cfg.topK,
               maxContextChars: cfg.maxContextChars,
               abstainMessage: cfg.abstainMessage,
+              arbiterEnabled: cfg.arbiterEnabled,
+              arbiterSharedLabel: cfg.arbiterSharedLabel,
+              arbiterMinEvidenceChars: cfg.arbiterMinEvidenceChars,
+              arbiterHighImpactMargin: cfg.arbiterHighImpactMargin,
+              arbiterAllowRefine: cfg.arbiterAllowRefine,
+              arbiterFailClosedOnConflict: cfg.arbiterFailClosedOnConflict,
             },
           };
           if (params.state && typeof params.state === "object" && !Array.isArray(params.state)) {

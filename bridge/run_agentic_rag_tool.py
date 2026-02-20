@@ -80,6 +80,19 @@ def _config_from_plugin_config(cfg: dict[str, Any]) -> AgenticRagConfig:
         embedding_timeout_ms=int(_sanitize_number(cfg.get("embeddingTimeoutMs"), 10000, 500, 120000)),
         hybrid_lexical_weight=float(_sanitize_number(cfg.get("hybridLexicalWeight"), 0.35, 0.0, 1.0)),
         hybrid_min_lexical_score=float(_sanitize_number(cfg.get("hybridMinLexicalScore"), 0.0, 0.0, 1.0)),
+        arbiter_enabled=_sanitize_bool(cfg.get("arbiterEnabled", False), False),
+        arbiter_shared_label=str(cfg.get("arbiterSharedLabel") or "contracts_v1"),
+        arbiter_min_evidence_chars=int(
+            _sanitize_number(cfg.get("arbiterMinEvidenceChars"), 120, 16, 20000)
+        ),
+        arbiter_high_impact_margin=float(
+            _sanitize_number(cfg.get("arbiterHighImpactMargin"), 0.10, 0.0, 1.0)
+        ),
+        arbiter_allow_refine=_sanitize_bool(cfg.get("arbiterAllowRefine", True), True),
+        arbiter_fail_closed_on_conflict=_sanitize_bool(
+            cfg.get("arbiterFailClosedOnConflict", True),
+            True,
+        ),
     )
 
 

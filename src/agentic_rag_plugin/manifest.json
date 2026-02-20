@@ -7,7 +7,8 @@
     "retrieve",
     "grounded_answer",
     "abstain_when_unknown",
-    "confidence_gate"
+    "confidence_gate",
+    "arbiter_v1"
   ],
   "metrics": [
     "grounded_answer_rate_on_answerable",
@@ -16,4 +17,3 @@
     "hallucination_rate_on_unanswerable"
   ]
 }
-

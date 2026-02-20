@@ -92,6 +92,40 @@
       "abstainMessage": {
         "type": "string"
       },
+      "arbiterEnabled": {
+        "type": "boolean",
+        "default": false,
+        "description": "Enable optional three-role arbitration pass (evidence/action/policy)."
+      },
+      "arbiterSharedLabel": {
+        "type": "string",
+        "default": "contracts_v1",
+        "description": "Shared label attached to all arbitration roles in diagnostics."
+      },
+      "arbiterMinEvidenceChars": {
+        "type": "integer",
+        "minimum": 16,
+        "maximum": 20000,
+        "default": 120,
+        "description": "Minimum evidence chars required by evidence role before answering."
+      },
+      "arbiterHighImpactMargin": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0.1,
+        "description": "Extra confidence margin required for high-impact intents."
+      },
+      "arbiterAllowRefine": {
+        "type": "boolean",
+        "default": true,
+        "description": "Allow action role to recommend refine_query before answer."
+      },
+      "arbiterFailClosedOnConflict": {
+        "type": "boolean",
+        "default": true,
+        "description": "If roles disagree, force abstain to fail closed."
+      },
       "timeoutMs": {
         "type": "integer",
         "minimum": 1000,

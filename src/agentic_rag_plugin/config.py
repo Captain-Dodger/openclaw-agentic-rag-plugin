@@ -21,3 +21,13 @@ class AgenticRagConfig:
     embedding_timeout_ms: int = 10000
     hybrid_lexical_weight: float = 0.35
     hybrid_min_lexical_score: float = 0.0
+    # Optional multi-role arbitration layer (off by default).
+    arbiter_enabled: bool = False
+    arbiter_shared_label: str = "contracts_v1"
+    arbiter_evidence_skills: tuple[str, str] = ("retrieval_quality", "source_attribution")
+    arbiter_action_skills: tuple[str, str] = ("tool_selection", "query_refinement")
+    arbiter_policy_skills: tuple[str, str] = ("risk_scoring", "policy_gate")
+    arbiter_min_evidence_chars: int = 120
+    arbiter_high_impact_margin: float = 0.10
+    arbiter_allow_refine: bool = True
+    arbiter_fail_closed_on_conflict: bool = True

@@ -38,3 +38,17 @@ class RagDecision:
         out = asdict(self)
         out["hits"] = [h.as_dict() for h in self.hits]
         return out
+
+
+@dataclass(frozen=True)
+class ArbiterPacket:
+    role: str
+    claim: str
+    evidence_refs: list[str]
+    confidence: float
+    risk: float
+    proposed_action: str
+    missing_info: list[str]
+
+    def as_dict(self) -> dict[str, Any]:
+        return asdict(self)

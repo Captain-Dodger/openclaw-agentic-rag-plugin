@@ -65,6 +65,12 @@ Configured under `plugins.entries["agentic-rag"].config`:
 | `topK` | `pluginConfig.topK` | `top_k` |
 | `maxContextChars` | `pluginConfig.maxContextChars` | `max_context_chars` |
 | `abstainMessage` | `pluginConfig.abstainMessage` | `abstain_message` |
+| `arbiterEnabled` | `pluginConfig.arbiterEnabled` | `arbiter_enabled` |
+| `arbiterSharedLabel` | `pluginConfig.arbiterSharedLabel` | `arbiter_shared_label` |
+| `arbiterMinEvidenceChars` | `pluginConfig.arbiterMinEvidenceChars` | `arbiter_min_evidence_chars` |
+| `arbiterHighImpactMargin` | `pluginConfig.arbiterHighImpactMargin` | `arbiter_high_impact_margin` |
+| `arbiterAllowRefine` | `pluginConfig.arbiterAllowRefine` | `arbiter_allow_refine` |
+| `arbiterFailClosedOnConflict` | `pluginConfig.arbiterFailClosedOnConflict` | `arbiter_fail_closed_on_conflict` |
 | `pythonBin` | adapter runtime only | bridge interpreter |
 | `bridgeScript` | adapter runtime only | bridge file path |
 | `timeoutMs` | adapter runtime only | bridge timeout |

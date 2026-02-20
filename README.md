@@ -35,6 +35,30 @@ Response includes:
 - `hits` with `doc_id`, `source`, `score`
 - `metrics` (`top_score`, `mean_top2`, `evidence_chars`, `hits`)
 
+## Optional: arbiter_v1 (experimental)
+
+You can enable an optional 3-role arbitration pass:
+
+- `evidence` role
+- `action` role
+- `policy` role
+
+This layer stays interpreted and emits diagnostics in `metrics.arbiter_v1`.
+Default is `off` (no behavior change from baseline).
+
+Config keys:
+
+- `arbiterEnabled`
+- `arbiterSharedLabel`
+- `arbiterMinEvidenceChars`
+- `arbiterHighImpactMargin`
+- `arbiterAllowRefine`
+- `arbiterFailClosedOnConflict`
+
+Details:
+
+- `docs/arbiter_v1.md`
+
 ## Corpus source modes
 
 `corpusPath` can point to:
@@ -123,6 +147,12 @@ Then restart the OpenClaw gateway process so it picks up the new env value.
           corpusPath: "data/corpus_demo.json",
           minRetrievalScore: 0.12,
           minConfidence: 0.12,
+          arbiterEnabled: false,
+          arbiterSharedLabel: "contracts_v1",
+          arbiterMinEvidenceChars: 120,
+          arbiterHighImpactMargin: 0.1,
+          arbiterAllowRefine: true,
+          arbiterFailClosedOnConflict: true,
           topK: 4,
           maxContextChars: 1400,
           timeoutMs: 15000

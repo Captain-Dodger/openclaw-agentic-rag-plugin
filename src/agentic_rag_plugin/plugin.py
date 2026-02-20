@@ -9,6 +9,7 @@ from typing import Any
 from urllib import error as urlerror
 from urllib import request as urlrequest
 
+from .arbiter import run_arbiter_v1
 from .corpus_loader import load_documents_from_source
 from .config import AgenticRagConfig
 from .types import Document, RagDecision, RetrievalHit
@@ -355,29 +356,53 @@ class AgenticRagPlugin:
         if self._last_retrieval_meta.get("note"):
             metrics["retrieval_note"] = self._last_retrieval_meta["note"]
 
+        arbiter: dict[str, Any] | None = None
+        if self.config.arbiter_enabled:
+            arbiter = run_arbiter_v1(
+                query=query,
+                hits=hits,
+                top_score=top,
+                mean_top2=mean_top2,
+                confidence=confidence,
+                evidence_chars=len(context),
+                grounded_candidate=grounded,
+                config=self.config,
+            )
+            grounded = bool(arbiter.get("mode") == "answer")
+            metrics["arbiter_v1"] = arbiter.get("metrics", {})
+            metrics["arbiter_packets"] = arbiter.get("packets", [])
+            if arbiter.get("refine_query"):
+                metrics["refine_query"] = arbiter["refine_query"]
+
         if not grounded:
+            rationale = (
+                "No sufficient grounded evidence from retrieval "
+                f"(top_score={top}, confidence={confidence})."
+            )
+            if arbiter:
+                rationale += f" arbiter_v1={arbiter.get('rationale', 'n/a')}."
             return RagDecision(
                 mode="abstain",
                 confidence=confidence,
                 answer=self.config.abstain_message,
-                rationale=(
-                    "No sufficient grounded evidence from retrieval "
-                    f"(top_score={top}, confidence={confidence})."
-                ),
+                rationale=rationale,
                 context=context,
                 hits=hits,
                 metrics=metrics,
             )
 
         answer = "Grounded answer from retrieved evidence:\n" + "\n".join(answer_lines[:3])
+        rationale = (
+            "Grounded by retrieval hits above thresholds "
+            f"(top_score={top}, confidence={confidence})."
+        )
+        if arbiter:
+            rationale += f" arbiter_v1={arbiter.get('rationale', 'n/a')}."
         return RagDecision(
             mode="answer",
             confidence=confidence,
             answer=answer,
-            rationale=(
-                "Grounded by retrieval hits above thresholds "
-                f"(top_score={top}, confidence={confidence})."
-            ),
+            rationale=rationale,
             context=context,
             hits=hits,
             metrics=metrics,
@@ -432,6 +457,12 @@ def _default_plugin() -> AgenticRagPlugin:
         embedding_timeout_ms=_env_int("OPENCLAW_AGENTIC_RAG_EMBEDDING_TIMEOUT_MS", 10000),
         hybrid_lexical_weight=_env_float("OPENCLAW_AGENTIC_RAG_HYBRID_LEXICAL_WEIGHT", 0.35),
         hybrid_min_lexical_score=_env_float("OPENCLAW_AGENTIC_RAG_HYBRID_MIN_LEXICAL_SCORE", 0.0),
+        arbiter_enabled=_env_bool("OPENCLAW_AGENTIC_RAG_ARBITER_ENABLED", False),
+        arbiter_shared_label=os.getenv("OPENCLAW_AGENTIC_RAG_ARBITER_SHARED_LABEL", "contracts_v1"),
+        arbiter_min_evidence_chars=_env_int("OPENCLAW_AGENTIC_RAG_ARBITER_MIN_EVIDENCE_CHARS", 120),
+        arbiter_high_impact_margin=_env_float("OPENCLAW_AGENTIC_RAG_ARBITER_HIGH_IMPACT_MARGIN", 0.10),
+        arbiter_allow_refine=_env_bool("OPENCLAW_AGENTIC_RAG_ARBITER_ALLOW_REFINE", True),
+        arbiter_fail_closed_on_conflict=_env_bool("OPENCLAW_AGENTIC_RAG_ARBITER_FAIL_CLOSED_ON_CONFLICT", True),
     )
     _DEFAULT_PLUGIN = AgenticRagPlugin.from_json_path(corpus_path, config=config)
     return _DEFAULT_PLUGIN
