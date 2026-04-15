@@ -379,6 +379,11 @@ class AgenticRagPlugin:
             if arbiter_mode == "enforce":
                 grounded = bool(arbiter.get("mode") == "answer")
             metrics["arbiter_v1"] = arbiter.get("metrics", {})
+            
+            # Lift thermodynamics to top-level diagnostic
+            if "thermodynamics" in metrics["arbiter_v1"]:
+                metrics["thermodynamics"] = metrics["arbiter_v1"]["thermodynamics"]
+                
             metrics["arbiter_packets"] = arbiter.get("packets", [])
             metrics["arbiter_mode"] = arbiter_mode
             metrics["arbiter_effective"] = (

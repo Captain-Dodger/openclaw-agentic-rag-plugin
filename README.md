@@ -1,6 +1,6 @@
-# OpenClaw Agentic RAG Plugin (MIT)
+# OpenClaw Thermodynamic Agentic RAG Plugin (MIT)
 
-OpenClaw plugin scaffold for retrieval-gated answering.
+OpenClaw plugin scaffold for thermodynamic retrieval-gated answering, powered by a localized ZPM (Tension) Engine.
 
 The repository contains:
 
@@ -35,13 +35,15 @@ Response includes:
 - `hits` with `doc_id`, `source`, `score`
 - `metrics` (`top_score`, `mean_top2`, `evidence_chars`, `hits`)
 
-## Optional: arbiter_v1 (experimental)
+## Optional: Arbiter (Thermodynamic Modulated)
 
-You can enable an optional 3-role arbitration pass:
+You can enable an optional 3-role arbitration pass powered by Epistemic Tension (Resonance/Dissonance):
 
 - `evidence` role
 - `action` role
 - `policy` role
+
+The Arbiter actively calculates **Epistemic Tension** based on contradictory role constraints (e.g. low source confidence vs high system policy impact). As tension rises, the engine dynamically lowers its threshold limits (`dynamic_theta`), forcing the system to `abstain` or `refine_query` far earlier than a static pipeline would. This provides fluid, autonomic hallucination control without hardcoded Regex blocks.
 
 This layer stays interpreted and emits diagnostics in `metrics.arbiter_v1`.
 Default is `off` (no behavior change from baseline).

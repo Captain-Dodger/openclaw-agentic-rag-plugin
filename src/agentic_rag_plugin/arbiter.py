@@ -42,6 +42,22 @@ def _arbiter_packet(
     )
 
 
+def _calculate_tension(grounding_ok: bool, high_impact: bool, confidence: float, conflict: bool) -> float:
+    """Berechnet den epistemischen Metabolismus (Heat)."""
+    tension = 0.1 # Base heat
+    if not grounding_ok:
+        tension += 0.3 # Uncertainty creates tension
+    if high_impact:
+        tension += 0.4 # High risk creates tension
+    if conflict:
+        tension += 0.2 # Role conflict creates tension
+    
+    # Mathematical Singularity: Extreme low confidence creates intense heat (Dissonance)
+    if confidence < 0.3:
+        tension += 0.2 
+        
+    return _clamp(tension, 0.0, 1.0)
+
 def run_arbiter_v1(
     *,
     query: str,
@@ -53,10 +69,9 @@ def run_arbiter_v1(
     grounded_candidate: bool,
     config: AgenticRagConfig,
 ) -> dict[str, Any]:
-    """Three-role arbitration pass for answer/abstain decisions.
-
-    This keeps existing single-step behavior intact and only adds an optional
-    interpreted decision layer that can be toggled via config.
+    """Thermodynamic Arbitration pass for answer/abstain decisions.
+    
+    Replaces static thresholds with emergent tension modulation.
     """
     evidence_refs = [h.doc_id for h in hits[:3]]
     missing: list[str] = []
@@ -65,9 +80,23 @@ def run_arbiter_v1(
     if evidence_chars < config.arbiter_min_evidence_chars:
         missing.append("evidence_chars")
 
-    # 1) Evidence role.
+    high_impact = _high_impact_query(query)
     grounding_strength = 0.60 * top_score + 0.40 * mean_top2
     grounding_ok = grounded_candidate and evidence_chars >= config.arbiter_min_evidence_chars
+
+    # 1) Calculate Thermodynamic Tension
+    # Simulate a potential role conflict before computing the formal packets
+    simulated_action_mode = "answer" if grounding_ok else "abstain"
+    simulated_gov_risk = 0.20 + (0.30 if not grounding_ok else 0.0) + (0.35 if high_impact else 0.0)
+    simulated_conflict = (simulated_action_mode == "answer" and simulated_gov_risk >= 0.55)
+    
+    tension = _calculate_tension(grounding_ok, high_impact, confidence, simulated_conflict)
+    
+    # Dynamic Theta shifts based on tension. High tension LOWERS the risk threshold, meaning the system
+    # abstains earlier. Standard theta was 0.55.
+    dynamic_theta_risk = _clamp(0.65 - (tension * 0.40), 0.20, 0.90)
+
+    # 1) Evidence role.
     grounding_action = "answer" if grounding_ok else "abstain"
     grounding = _arbiter_packet(
         role="evidence",
@@ -84,7 +113,10 @@ def run_arbiter_v1(
     )
 
     # 2) Action role.
-    near_threshold = bool(hits) and not grounding_ok and confidence >= (config.min_confidence * 0.75)
+    # At high tension, the arbiter refines queries more aggressively
+    dynamic_refine_margin = config.min_confidence * (1.0 - (tension * 0.3))
+    near_threshold = bool(hits) and not grounding_ok and confidence >= dynamic_refine_margin
+    
     action_mode = "answer" if grounding_ok else "abstain"
     refine_query: str | None = None
     if near_threshold and config.arbiter_allow_refine:
@@ -105,21 +137,23 @@ def run_arbiter_v1(
         missing_info=missing,
     )
 
-    # 3) Policy role.
-    high_impact = _high_impact_query(query)
+    # 3) Policy role (Thermodynamically Modulated).
     gov_risk = 0.20
     if not grounding_ok:
         gov_risk += 0.30
     if high_impact:
         gov_risk += 0.35
     gov_risk = _clamp(gov_risk, 0.0, 1.0)
-    gov_action = "abstain" if (gov_risk >= 0.55 or (high_impact and confidence < (config.min_confidence + config.arbiter_high_impact_margin))) else "answer"
+    
+    # Use dynamic_theta_risk for strictness
+    gov_action = "abstain" if (gov_risk >= dynamic_theta_risk or (high_impact and confidence < (config.min_confidence + (config.arbiter_high_impact_margin * (1.0 + tension))))) else "answer"
+    
     governance = _arbiter_packet(
         role="policy",
         claim=(
             "Policy/risk gates allow response."
             if gov_action == "answer"
-            else "Policy/risk gates require abstention or clarification."
+            else "Tension/risk gates require abstention or clarification."
         ),
         evidence_refs=evidence_refs[:1],
         confidence=1.0 - gov_risk,
@@ -137,14 +171,14 @@ def run_arbiter_v1(
     decision_action = "answer"
     reasons: list[str] = []
 
-    if high_impact and confidence < (config.min_confidence + config.arbiter_high_impact_margin):
+    if high_impact and confidence < (config.min_confidence + (config.arbiter_high_impact_margin * (1.0 + tension))):
         decision_mode = "abstain"
         decision_action = "abstain"
-        reasons.append("high_impact_margin_guard")
+        reasons.append("thermodynamic_high_impact_guard")
     elif conflict and config.arbiter_fail_closed_on_conflict:
         decision_mode = "abstain"
         decision_action = "abstain"
-        reasons.append("arbiter_conflict_guard")
+        reasons.append("thermodynamic_conflict_guard")
     elif action.proposed_action == "refine_query":
         decision_mode = "abstain"
         decision_action = "refine_query"
@@ -169,6 +203,10 @@ def run_arbiter_v1(
             "grounded_candidate": grounded_candidate,
             "decision_action": decision_action,
             "shared_label": config.arbiter_shared_label,
+            "thermodynamics": {
+                "tension": round(tension, 4),
+                "dynamic_theta": round(dynamic_theta_risk, 4)
+            },
             "skills_by_role": {
                 "evidence": list(config.arbiter_evidence_skills) + [config.arbiter_shared_label],
                 "action": list(config.arbiter_action_skills) + [config.arbiter_shared_label],
